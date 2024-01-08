@@ -195,6 +195,7 @@ public:
     );
 
 
+    [[eosio::on_notify("*::transfer")]]
     void receive_token_transfer(
         name from,
         name to,
@@ -202,6 +203,7 @@ public:
         string memo
     );
 
+    [[eosio::on_notify("atomicassets::transfer")]]
     void receive_asset_transfer(
         name from,
         name to,
@@ -209,6 +211,7 @@ public:
         string memo
     );
 
+    [[eosio::on_notify("atomicassets::lognewoffer")]]
     void receive_asset_offer(
         uint64_t offer_id,
         name sender,
@@ -467,28 +470,3 @@ private:
     void internal_transfer_assets(name to, vector <uint64_t> asset_ids, string memo);
 
 };
-
-
-extern "C"
-void apply(uint64_t receiver, uint64_t code, uint64_t action) {
-    if (code == receiver) {
-        switch (action) {
-            EOSIO_DISPATCH_HELPER(atomicmarket, \
-            (init)(convcounters)(setminbidinc)(setversion)(addconftoken)(adddelphi)(setmarketfee)(regmarket)(withdraw) \
-            (addbonusfee)(addafeectr)(stopbonusfee)(delbonusfee) \
-            (announcesale)(cancelsale)(purchasesale)(assertsale) \
-            (announceauct)(cancelauct)(auctionbid)(auctclaimbuy)(auctclaimsel)(assertauct) \
-            (createbuyo)(cancelbuyo)(acceptbuyo)(declinebuyo) \
-            (paysaleram)(payauctram)(paybuyoram) \
-            (lognewsale)(lognewauct)(lognewbuyo)(logsalestart)(logauctstart))
-        }
-    } else if (code == atomicassets::ATOMICASSETS_ACCOUNT.value && action == name("transfer").value) {
-        eosio::execute_action(name(receiver), name(code), &atomicmarket::receive_asset_transfer);
-
-    } else if (code == atomicassets::ATOMICASSETS_ACCOUNT.value && action == name("lognewoffer").value) {
-        eosio::execute_action(name(receiver), name(code), &atomicmarket::receive_asset_offer);
-
-    } else if (action == name("transfer").value) {
-        eosio::execute_action(name(receiver), name(code), &atomicmarket::receive_token_transfer);
-    }
-}
